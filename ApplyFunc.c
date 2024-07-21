@@ -1,0 +1,272 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdbool.h>
+
+#include "Fonction.h"
+
+USER* Create_User(USER* user)
+{
+	printf("Enter your First_Name: ");
+	fgets(user->FIRST_NAME, String_len, stdin);
+	(user->FIRST_NAME)[strlen(user->FIRST_NAME) - 1] = 0;
+
+	printf("Enter your last_Name: ");
+	fgets(user->LAST_NAME, String_len, stdin);
+	(user->LAST_NAME)[strlen(user->LAST_NAME) - 1] = 0;
+	
+
+	return user;
+}
+
+CREDENTIAL Create_UserCredential()
+{
+	CREDENTIAL user_credential;
+
+	Create_User(&user_credential.User_Name);
+
+	bool isCorrect_password = false; // check if the password has good length
+	do
+	{
+		printf("Enter your password: ");
+		fgets(user_credential.PASSWORD, String_len, stdin);
+		(user_credential.PASSWORD)[strlen(user_credential.PASSWORD) - 1] = 0;
+
+		if (Password_verification(&user_credential) == true)//i should send only pointer to user_credential.Password
+		{
+			isCorrect_password = true;
+
+			const char temp[17] = "@stud.uniroma3.it";
+
+			for (size_t i = 0; i < 3; i++)
+			{
+				user_credential.POSTA_ELLETRONICA[i] = user_credential.User_Name.LAST_NAME[i];
+				//tolower(user_credential.POSTA_ELLETRONICA[i]);
+			}
+
+			strcat(strcpy(user_credential.POSTA_ELLETRONICA, strtolower(user_credential.POSTA_ELLETRONICA)), ".");
+			strcat(user_credential.POSTA_ELLETRONICA, strtolower(user_credential.User_Name.FIRST_NAME));
+			strcat(user_credential.POSTA_ELLETRONICA, temp);
+			strcat(user_credential.POSTA_ELLETRONICA, "\0");
+			bool isCorrect_Cellular = true;
+
+			do
+			{
+				printf("Enter your phone Number(Only nombers): ");
+				fgets(user_credential.CELLULAR, String_len, stdin);
+				(user_credential.CELLULAR)[strlen(user_credential.CELLULAR) - 1] = 0;
+
+				if (Cellular_Verification(&user_credential))
+				{
+					isCorrect_Cellular = false;
+				}
+				else
+				{
+					printf("The phone number can't contain alphabet characters..\n");
+				}
+			} while (isCorrect_Cellular);
+
+			/* create file to strore credentials */
+		}
+		else
+		{
+			printf("your password is Weak, try another one ...\n");
+		}
+	} while ((isCorrect_password) == false);
+
+
+	//ddefinition d'un fichier comme base de donnee...
+
+
+	return user_credential;
+}
+
+// function to save credential....
+void Save_Credential(CREDENTIAL* user_credential)
+{
+	FILE* Credential_File;
+	Credential_File = fopen("credential_file.txt", "w");
+
+	if (Credential_File == NULL)
+	{
+		fprintf(stderr, "opened file failed..\n");
+		exit(-1);
+	}
+	else
+	{
+		fprintf(&(user_credential->User_Name.FIRST_NAME), String_len, )
+	}
+
+}
+
+//function to convert upper to lower
+char* strtolower(char* src)
+{
+	//char result[String_len];
+	int i = 0;
+	while (src[i] != 0)
+	{
+		src[i] = tolower(src[i]);
+		i++;
+	}
+	return src;
+}
+
+bool Cellular_Verification(CREDENTIAL* user_credential)
+{
+	bool isVerified_cellular = true;
+
+	for (size_t i = 0; user_credential->CELLULAR[i] != 0; i++)
+	{
+		if (isalpha(user_credential->CELLULAR[i]))
+		{
+			fprintf(stderr, "ERROR: the phone number can't contain alphabet characters..\n");
+			isVerified_cellular = false;
+		}
+	}
+	return isVerified_cellular;
+}
+bool Password_verification(CREDENTIAL* user_credential)//i should passed a string point here, and check if ther is others char than alphaNum
+{
+	bool isVerified_password = true;
+	size_t Password_length = strlen(user_credential->PASSWORD);
+	if (Password_length < 12)
+	{
+		isVerified_password = false;
+		printf("Weak password..\n");
+	}
+	
+	return isVerified_password;
+}
+
+bool Credentials_Verification(CREDENTIAL* user_credential, char* Entred_UserName, char* Entred_Password) // not strct but pointer on string
+{
+	// username and Password will be retrieved from file and compare whith Entred_UserName and Entred_Password
+
+	/*(void)Retrieved_Credentials(FILE* File_Credential, char* S_1, char* S_2)*/
+	char Username[String_len];
+	char Password[String_len];
+	/*	POSTA_ELLETRONICA and PASSWORD will be retrieved in username and Passwor
+		so it'is useless to make the strcpy
+		the comparison gonna be between (username and Entred_UserName) and (Password and Entred_Password)
+	*/
+
+	strcpy(Username, Entred_UserName);
+	strcpy(Password, Entred_Password);
+	bool isVerified_Crendentials;
+
+	int try_count = 0;
+	do
+	{
+		
+		if ((strcmp(Username, user_credential->POSTA_ELLETRONICA) == 0) && (strcmp(Password, user_credential->PASSWORD) == 0))
+		{
+			isVerified_Crendentials = true;
+			break;
+		}
+		else
+		{
+			printf("ERREUR, information not compatible..\n");
+		}
+
+		printf("enter your User_name: ");
+		fgets(Username, String_len, stdin);
+		(Username)[strlen(Username) - 1] = 0;
+
+		printf("entrer your Password: ");
+		fgets(Password, String_len, stdin);
+		(Password)[strlen(Password) - 1] = 0;
+		
+		try_count++;
+	} while (try_count < 3); //double check
+
+	if (try_count == 3)
+	{
+		isVerified_Crendentials = false;
+	}
+
+	return isVerified_Crendentials;
+}
+void Connection_Session(CREDENTIAL* user_credential)
+{
+	printf("Connection Session..........\n");
+
+	bool iscorrect_crendential, isVerified_passWord;
+
+	char Entred_UserName[String_len];
+	char Entred_Password[String_len];
+	
+	int choice;
+
+	printf("enter your User_name: ");
+	fgets(Entred_UserName, String_len, stdin);
+	(Entred_UserName)[strlen(Entred_UserName) - 1] = 0;
+
+	printf("entrer your Password: ");
+	fgets(Entred_Password, String_len, stdin);
+	(Entred_Password)[strlen(Entred_Password) - 1] = 0;
+
+	isVerified_passWord = Password_verification(user_credential);// not verified the length but match betwin entred_p and password saved
+
+	while (isVerified_passWord)
+	{
+		printf("1-> try to connect..\n");//they gonna be events
+		printf("2-> forget Password..\n");
+		printf("0-> to return .......\n");
+
+		printf("Enter your choice: "); //event
+		scanf("%d%*c", &choice);
+
+		switch (choice) // choise gonna be event and the switch willn't work on the int
+		{
+		case 1:
+			iscorrect_crendential = Credentials_Verification(user_credential, Entred_UserName, Entred_Password);
+			break;
+		case 2:
+			printf("reset password function call..\n");
+			break;
+
+		default:
+			break;
+		}
+		if (iscorrect_crendential == true)
+		{
+			printf("Welcom in your session..\n");
+		}
+		else
+		{
+			printf("Account Blocked, contact the helpdesk to reset the password..\n");
+		}
+		isVerified_passWord = false;
+	}
+
+}
+
+int main(void)
+{
+	int choice;
+	printf("1-> Sing in \n");
+	printf("2-> Sing up \n");
+
+	printf("enter your choice: ");
+	scanf("%d%*c", &choice);
+
+	switch (choice)
+	{
+		CREDENTIAL my_crede;
+		case 1: 
+			Connection_Session(&my_crede);
+			break;
+		case 2:
+			my_crede = Create_UserCredential();
+			//Sauvegarde dans une fichier servant de base de donnée
+			printf("This is your email: %s\n", my_crede.POSTA_ELLETRONICA);
+			Connection_Session(&my_crede);
+			break;
+		default:
+			fprintf(stderr, "ERROR: Choice error..\n");
+	}
+	
+	return 0;
+}
